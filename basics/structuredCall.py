@@ -11,9 +11,11 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # --------------------------------------------------------------
 
 
-class CalendarEvent(BaseModel):
+class ticketEvent(BaseModel):
     name: str
     date: str
+    numberOfTickets: int
+    locationOfTickets: str
     participants: list[str]
 
 
@@ -22,15 +24,15 @@ class CalendarEvent(BaseModel):
 # --------------------------------------------------------------
 
 completion = client.beta.chat.completions.parse(
-    model="gpt-4o",
+    model="gpt-4o-mini",
     messages=[
         {"role": "system", "content": "Extract the event information."},
         {
             "role": "user",
-            "content": "Alice and Bob are going to a science fair on Friday.",
+            "content": "I want three tickets to the next Memphsi Grizzlies game vs the Lakers on Christmass day. I would like floor seats.",
         },
     ],
-    response_format=CalendarEvent,
+    response_format=ticketEvent, # <-- Use this class
 )
 
 # --------------------------------------------------------------
@@ -41,3 +43,16 @@ event = completion.choices[0].message.parsed
 event.name
 event.date
 event.participants
+event.numberOfTickets
+event.locationOfTickets
+
+print(event)
+
+
+""" output:
+name='Memphis Grizzlies vs Los Angeles Lakers' 
+date='2023-12-25' 
+numberOfTickets=3 
+locationOfTickets='Floor seats' 
+participants=['Memphis Grizzlies', 'Los Angeles Lakers']
+"""
