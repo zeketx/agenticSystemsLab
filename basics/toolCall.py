@@ -72,7 +72,7 @@ completion.model_dump()
 """ChatCompletion(
 # When you call completion.model_dump(), it returns something like this:
 {
-    'id': 'chatcmpl-B3o8J13KlmQjyh9HXhp2AUE3kqPA7',
+    'id': 'chatcmpl-B3o8J13KlsdmQjyh9HXhp2AUE3kqPAds7',
     'choices': [{
         'finish_reason': 'tool_calls',
         'index': 0,
@@ -84,7 +84,7 @@ completion.model_dump()
             'audio': None,
             'function_call': None,
             'tool_calls': [{
-                'id': 'call_oAlOPd0in2LqDtuVGsQcFqYu',
+                'id': 'call_oAlOPd0sdin2LqDtuVGsQcFqYuad',
                 'function': {
                     'arguments': '{"latitude":35.1495,"longitude":-90.049}',
                     'name': 'get_weather'
@@ -97,7 +97,7 @@ completion.model_dump()
     'model': 'gpt-4o-2024-08-06',
     'object': 'chat.completion',
     'service_tier': 'default',
-    'system_fingerprint': 'fp_eb9dce56a8',
+    'system_fingerprint': 'fp_eb9ddcsde5436a8',
     'usage': {
         'completion_tokens': 25,
         'prompt_tokens': 67,
@@ -126,12 +126,12 @@ def call_function(name, args):
 
 
 for tool_call in completion.choices[0].message.tool_calls:
-    name = tool_call.function.name
+    name = tool_call.function.name #<--'name': 'get_weather'
     args = json.loads(tool_call.function.arguments)
     messages.append(completion.choices[0].message)
 
     result = call_function(name, args)
-    messages.append(
+    messages.append( # working with memory
         {"role": "tool", "tool_call_id": tool_call.id, "content": json.dumps(result)}
     )
 
