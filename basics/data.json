@@ -1,0 +1,38 @@
+{
+    "status": "success",
+    "timestamp": "2025-02-28T00:00:00Z",
+    "team": "Memphis Grizzlies",
+    "season": "2024-25",
+    "ticketing_policies": [
+      {
+        "policy_id": 1,
+        "title": "No Refunds or Exchanges",
+        "description": "All ticket sales are final. No refunds or exchanges will be issued except in the case of game cancellation without rescheduling.",
+        "last_updated": "2024-10-01"
+      },
+      {
+        "policy_id": 2,
+        "title": "Mobile Entry Only",
+        "description": "Entry to FedExForum requires mobile tickets via the Grizzlies Mobile App or Ticketmaster account. Physical tickets are not accepted.",
+        "last_updated": "2024-09-15"
+      },
+      {
+        "policy_id": 3,
+        "title": "Child Admission Policy",
+        "description": "Children under 2 years old may enter free if they sit on an adult's lap. All other children require a ticket.",
+        "last_updated": "2024-08-20"
+      },
+      {
+        "policy_id": 4,
+        "title": "Resale Restrictions",
+        "description": "Tickets may only be resold through official Grizzlies partners (e.g., Ticketmaster). Third-party resales above face value are prohibited.",
+        "last_updated": "2024-11-01"
+      },
+      {
+        "policy_id": 5,
+        "title": "Game Time Changes",
+        "description": "Ticket holders will be notified of any game time changes via email. Original tickets remain valid unless otherwise stated.",
+        "last_updated": "2024-10-15"
+      }
+    ]
+  }
