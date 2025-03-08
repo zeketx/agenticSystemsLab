@@ -77,15 +77,13 @@ def extract_event_info(user_input: str) -> EventExtraction:
         ],
         response_format=EventExtraction,
     )
-    
-     # ✅ Print the exact request before sending to OpenAI
-    print("\n--- DEBUG: OpenAI API Request (extract_event_info) ---")
-    print("Model:", model)
-    print("Messages:", messages)
+    # ✅ Print full OpenAI response
+    print("\n--- DEBUG: OpenAI API Response (extract_event_info) ---")
+    print(completion)  # 🔍 See exact response before parsing
     print("------------------------------------------------------\n")
-    
+
     result = completion.choices[0].message.parsed
-    print("extract_event_info()--->",result)
+    
     logger.info(
         f"Extraction complete - Is calendar event: {result.is_calendar_event}, Confidence: {result.confidence_score:.2f}"
     )
@@ -146,7 +144,7 @@ def generate_confirmation(event_details: EventDetails) -> EventConfirmation:
         messages=[
             {
                 "role": "system",
-                "content": "Generate a natural confirmation message for the event. Sign off with your name: Susie",
+                "content": "Generate a natural confirmation message for the event. Sign off with your name: Zeke",
             },
             {"role": "user", "content": event_json},
         ],
@@ -211,7 +209,7 @@ def process_calendar_request(user_input: str) -> Optional[EventConfirmation]:
 # Step 4: Test the chain with a valid input
 # --------------------------------------------------------------
 
-user_input = "Let's schedule a 1h team meeting next Wed. at 2pm with Greg and Zeke to discuss the product roadmap."
+user_input = "Let's schedule a 2h team meeting next Wed. at 7pm with Greg and Zeke to discuss the product roadmap."
 
 result = process_calendar_request(user_input)
 if result:
@@ -226,7 +224,7 @@ else:
 # Step 5: Test the chain with an invalid input
 # --------------------------------------------------------------
 
-user_input = "Can you send an email to Alice and Bob to discuss the project roadmap?"
+user_input = "Can you send an email to Jake and Logan to discuss the product roadmap?"
 
 result = process_calendar_request(user_input)
 if result:
