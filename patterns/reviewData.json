@@ -1,0 +1,62 @@
+[
+    {
+      "id": "rev_nba_12345",
+      "feature_id": "f_live_stats",
+      "feature_name": "Live Game Statistics",
+      "date": "2024-09-15",
+      "rating": 4,
+      "verified_user": true,
+      "title": "Great live stats, but sometimes delayed",
+      "review_text": "I love being able to track all the live stats during the game. The shot charts, player comparisons, and possession breakdowns are fantastic. The interface is clean and easy to navigate. However, I've noticed the stats sometimes lag behind the actual game by a few plays. It's usually only a few seconds, but it can be frustrating when you're trying to follow along in real-time. Still a great feature overall.",
+      "helpful_votes": 28,
+      "platform": "mobile_app"
+    },
+    {
+      "id": "rev_nba_23456",
+      "feature_id": "f_ticket_purchase",
+      "feature_name": "Ticket Purchase Feature",
+      "date": "2024-08-22",
+      "rating": 2,
+      "verified_user": true,
+      "title": "Disappointed with the app's ticket purchase flow - crashed multiple times",
+      "review_text": "I was excited to buy tickets for the upcoming game through the app. The seat selection and price filtering were good. Unfortunately, the app crashed three times during the checkout process. I had to restart my phone and re-enter my payment information each time. When I finally got through, the seats I originally selected were no longer available. Customer support has not responded to my emails. I'll stick to buying tickets through the website next time.",
+      "helpful_votes": 104,
+      "platform": "mobile_app"
+    },
+    {
+      "id": "rev_nba_34567",
+      "feature_id": "f_news_alerts",
+      "feature_name": "Team News and Alerts",
+      "date": "2024-09-05",
+      "rating": 5,
+      "verified_user": true,
+      "title": "Finally, a reliable source for team news!",
+      "review_text": "I've been looking for an app that gives me real-time updates on my team. The news alerts feature is perfect. I get notified about trades, injuries, and game highlights as soon as they happen. The articles are well-written and the push notifications are timely. The ability to customize the alert settings is a great touch. Highly recommend this feature for any die-hard fan.",
+      "helpful_votes": 57,
+      "platform": "mobile_app"
+    },
+    {
+      "id": "rev_nba_45678",
+      "feature_id": "f_video_highlights",
+      "feature_name": "Video Highlights and Replays",
+      "date": "2024-07-18",
+      "rating": 3,
+      "verified_user": false,
+      "title": "Good highlights but buffering issues",
+      "review_text": "I've been using the highlight feature for a few weeks. The quality of the video is excellent, and I love being able to re-watch key plays. However, I've experienced frequent buffering issues, especially during peak times. Sometimes the videos freeze or skip. I have a fast internet connection, so I don't think it's on my end. If the app developers can improve the streaming performance, this would be a top-notch feature.",
+      "helpful_votes": 31,
+      "platform": "mobile_app"
+    },
+    {
+      "id": "rev_nba_56789",
+      "feature_id": "f_arena_map",
+      "feature_name": "Arena Map and Concessions",
+      "date": "2024-09-10",
+      "rating": 5,
+      "verified_user": true,
+      "title": "Excellent arena map feature - made my game day experience much better!",
+      "review_text": "This feature was a game-changer! I used the arena map to find my seats, locate the nearest restrooms, and check out the concession stands. The ability to see menus and order food directly from the app was incredibly convenient. The map was easy to navigate and the directions were accurate. This made my game day experience much more enjoyable. I wish more sports apps had this feature!",
+      "helpful_votes": 89,
+      "platform": "mobile_app"
+    }
+  ]
