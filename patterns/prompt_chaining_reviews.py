@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 model = "gpt-4o-mini-2024-07-18"
 # --------------------------------------------------------------
-# Step 1: Define the data models for each stage
+# Define the data models for each stage
 # --------------------------------------------------------------
 
 class ReviewClassification(BaseModel):
@@ -36,7 +36,7 @@ class ReviewDetails(BaseModel):
     pros: list[str]
     cons: list[str]
     improvement_suggestions: list[str]
-    inferred_rating: float  # 1-5 scale
+    categorize_feedback: list[str] # bug report, feature request, feature enhancement, general feedback
     key_quotes: list[str]  # Quotable sections
 
 class ReviewAnalysis(BaseModel):
@@ -55,7 +55,7 @@ def load_review_data(file_path: str) -> List[Dict[str, Any]]:
         reviews = json.load(f)
     return reviews 
 # --------------------------------------------------------------
-# Step 2: Define the functions
+# Define the functions
 # --------------------------------------------------------------
 def validate_review(review_text: str) -> Optional[ReviewClassification]:
     """
