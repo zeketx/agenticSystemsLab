@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("PENAI_API_KEY"))
 model = "gpt-4o-mini-2024-07-18"
 # --------------------------------------------------------------
 # Define the data models for each stage
@@ -130,6 +130,97 @@ def validate_review(review_text: str) -> Optional[ReviewClassification]:
     
     return None
 
+def extract_review_details(review_text: str, classification: ReviewClassification) -> Optional[ReviewDetails]:
+    """
+    Extracts specific insights from the review text using details from the initial classification.
+    
+    Args:
+        review_text (str): The original review text.
+        classification (ReviewClassification): The structured output from the first LLM call.
+    
+    Returns:
+        ReviewDetails: Structured insights extracted from the review.
+        None: If the API response is invalid or an error occurs.
+    """
+    logger.info("Starting review details extraction")
+    
+    # Construct a prompt that includes context from the classification result
+    prompt = (
+        f"Given the following review text: '{review_text}', "
+        f"and knowing that it is classified as a product review in the category '{classification.product_category}' "
+        f"with an overall sentiment of '{classification.overall_sentiment}', "
+        "extract the following details in a structured JSON format: "
+        "- product_name: The name of the product being reviewed. "
+        "- mentioned_features: A list of features mentioned along with their sentiment (e.g., battery life, positive). "
+        "- pros: List the positive aspects mentioned. "
+        "- cons: List the negative aspects mentioned. "
+        "- improvement_suggestions: Any suggestions for improvement. "
+        "- categorize_feedback: Categories like bug report, feature request, feature enhancement, general feedback. "
+        "- key_quotes: Important excerpts from the review."
+    )
+    
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "Extract detailed insights from a product review."},
+                {"role": "user", "content": prompt},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "review_details",
+                    "description": "Extracts detailed insights from a product review.",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "product_name": {"type": "string"},
+                            "mentioned_features": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "feature": {"type": "string"},
+                                        "sentiment": {"type": "string", "enum": ["positive", "negative", "neutral"]}
+                                    },
+                                    "required": ["feature", "sentiment"],
+                                    "additionalProperties": False
+                                }
+                            },
+                            "pros": {"type": "array", "items": {"type": "string"}},
+                            "cons": {"type": "array", "items": {"type": "string"}},
+                            "improvement_suggestions": {"type": "array", "items": {"type": "string"}},
+                            "categorize_feedback": {"type": "array", "items": {"type": "string"}},
+                            "key_quotes": {"type": "array", "items": {"type": "string"}}
+                        },
+                        "required": ["product_name", "mentioned_features", "pros", "cons", "improvement_suggestions", "categorize_feedback", "key_quotes"],
+                        "additionalProperties": False
+                    }
+                }
+            }
+        )
+        
+        structured_response = completion.choices[0].message.content
+        
+        if structured_response:
+            # Optionally print for debugging:
+            print("\n--- DEBUG: Raw Details API Response ---")
+            print(structured_response)
+            print("----------------------------------------\n")
+            
+            details = ReviewDetails.model_validate_json(structured_response)
+            print(details)
+            print("\n--- DEBUG: Parsed Review Details ---")
+            print(details.model_dump_json(indent=4))
+            print("-------------------------------------\n")
+            
+            return details
+        
+    except Exception as e:
+        logger.error(f"Error during review details extraction: {e}", exc_info=True)
+    
+    return None
+
 # --------------------------------------------------------------
 # Step 3: Chain the functions together
 # --------------------------------------------------------------
@@ -137,31 +228,51 @@ def validate_review(review_text: str) -> Optional[ReviewClassification]:
 # --------------------------------------------------------------
 # Step 4: Test the chain with a valid input
 # --------------------------------------------------------------
-def test_review_validation():
-    # Path to your JSON file
-    reviews = load_review_data('reviewData.json')
+def test_full_review_analysis():
+    reviews = load_review_data("reviewData.json")
     
     for review in reviews:
         print(f"\nProcessing review: {review['id']}")
         print(f"Title: {review['title']}")
         
-        # Pass the review text to the validation function
-        result = validate_review(review['review_text'])
-        
-        print(f"Is a product review: {result.is_product_review}")
-        print(f"Product category: {result.product_category}")
-        print(f"Overall sentiment: {result.overall_sentiment}")
-        print(f"Confidence score: {result.confidence_score}")
+        # First LLM call: Validate and classify the review
+        classification = validate_review(review["review_text"])
+        if classification:
+            print("Classification:")
+            print(f"  Is Product Review: {classification.is_product_review}")
+            print(f"  Product Category: {classification.product_category}")
+            print(f"  Overall Sentiment: {classification.overall_sentiment}")
+            print(f"  Confidence Score: {classification.confidence_score}")
+            
+            # Only proceed if it is confirmed to be a product review
+            if classification.is_product_review:
+                details = extract_review_details(review["review_text"], classification)
+                if details:
+                    print("\nReview Details:")
+                    print(f"  Product Name: {details.product_name}")
+                    print(f"  Mentioned Features: {details.mentioned_features}")
+                    print(f"  Pros: {details.pros}")
+                    print(f"  Cons: {details.cons}")
+                    print(f"  Improvement Suggestions: {details.improvement_suggestions}")
+                    print(f"  Categorize Feedback: {details.categorize_feedback}")
+                    print(f"  Key Quotes: {details.key_quotes}")
+                else:
+                    print("Failed to extract review details.")
+            else:
+                print("The text is not a product review; skipping details extraction.")
+        else:
+            print("Review classification failed.")
         print("-------------------------------------------")
+
 
 # Example usage
 if __name__ == "__main__":
-    test_review_validation()
+    test_full_review_analysis()
 # --------------------------------------------------------------
 # Step 5: Test the chain with an invalid input
 # --------------------------------------------------------------
 
-"""
+""" RESPONSES
 2025-03-11 21:50:18 - INFO - Starting review validation analysis
 
 Processing review: rev_nba_12345

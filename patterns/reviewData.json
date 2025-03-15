@@ -24,15 +24,15 @@
       "platform": "mobile_app"
     },
     {
-      "id": "rev_nba_34567",
-      "feature_id": "f_news_alerts",
-      "feature_name": "Team News and Alerts",
-      "date": "2024-09-05",
+      "id": "rev_nba_22334",
+      "feature_id": null,
+      "feature_name": null,
+      "date": "2024-10-27",
       "rating": 5,
-      "verified_user": true,
-      "title": "Finally, a reliable source for team news!",
-      "review_text": "I've been looking for an app that gives me real-time updates on my team. The news alerts feature is perfect. I get notified about trades, injuries, and game highlights as soon as they happen. The articles are well-written and the push notifications are timely. The ability to customize the alert settings is a great touch. Highly recommend this feature for any die-hard fan.",
-      "helpful_votes": 57,
+      "verified_user": false,
+      "title": "Amazing Game!",
+      "review_text": "Just saw the game last night! What a thriller! That last-second shot was incredible! #GoGrizz #NBALive",
+      "helpful_votes": 0,
       "platform": "mobile_app"
     },
     {
