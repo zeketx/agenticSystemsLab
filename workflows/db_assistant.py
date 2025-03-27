@@ -171,7 +171,7 @@ def handle_chat_request(conn, user_message):
         print(Fore.RED + "No valid query generated. Exiting.")
         return
     
-    print(Fore.GREEN + f"LLM Reply: {chat_response.reply}")
+    print(Fore.GREEN + f"Agent Reply: {chat_response.reply}")
     print(Fore.BLUE + f"Generated Query: {chat_response.query}")
 
     result = execute_query(conn, chat_response.query)
@@ -202,3 +202,5 @@ if __name__ == "__main__":
     handle_chat_request(conn, user_question)
 
     conn.close()  # Close the connection when done
+    
+    
