@@ -1,0 +1,42 @@
+[
+    {
+        "id": "001",
+        "title": "Wi-Fi Issues in Section 101",
+        "feedback_text": "Wi-Fi was spotty during the game on 2025-05-01. Could barely use the app to order food.",
+        "source": "fan_survey",
+        "event_date": "2025-05-01",
+        "location": "Section 101"
+    },
+    {
+        "id": "002",
+        "title": "Scoreboard Glitch",
+        "feedback_text": "The scoreboard froze during the third quarter. It was confusing for fans.",
+        "source": "staff_report",
+        "event_date": "2025-05-01",
+        "location": "Main Arena"
+    },
+    {
+        "id": "003",
+        "title": "Ticketing App Crash",
+        "feedback_text": "The ticketing app crashed when I tried to buy tickets for the next game. Very frustrating!",
+        "source": "X_post",
+        "event_date": "2025-05-02",
+        "location": "Online"
+    },
+    {
+        "id": "004",
+        "title": "POS System Failure at Concessions",
+        "feedback_text": "The POS system at the main concessions stand crashed during halftime on 2025-05-03, causing long lines and cash-only chaos. Needs immediate fix before next game!",
+        "source": "staff_report",
+        "event_date": "2025-05-03",
+        "location": "Main Concessions Stand"
+    },
+    {
+        "id": "005",
+        "title": "General Comment on Arena Atmosphere",
+        "feedback_text": "The atmosphere at the game on 2025-05-03 was electric! Loved the music and lighting.",
+        "source": "fan_survey",
+        "event_date": "2025-05-03",
+        "location": "Arena Wide"
+    }
+]

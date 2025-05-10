@@ -156,7 +156,7 @@ def extract_review_details(review_text: str, classification: ReviewClassificatio
     """
     logger.info("Starting review details extraction")
     
-    # Construct a prompt that includes context from the classification result
+    # Constructed a prompt that includes context from the classification result
     prompt = (
         f"Given the following review text: '{review_text}', "
         f"and knowing that it is classified as a product review in the category '{classification.product_category}' "
@@ -253,7 +253,7 @@ def generate_review_analysis(
     """
     logger.info("Starting review analysis for actionable insights and JIRA ticket generation.")
     
-    # Construct a detailed prompt using information from the classification and details
+    # Constructed a detailed prompt using information from the classification and details
     prompt = (
         f"Review Text: {review_text}\n"
         f"Classification: The review is classified under product category '{classification.product_category}' "
