@@ -1,18 +1,25 @@
 import json
 import logging
 import os
+import sys
 from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field
 from openai import OpenAI
 from datetime import datetime, timedelta
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+import uvicorn
 
 # -----------------------------------------------------------
 # Configure logging for tracking script execution
+# All logs output to stdout for visibility in both CLI and API modes
 # -----------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,
+    force=True,
 )
 logger = logging.getLogger(__name__)
 
@@ -67,6 +74,33 @@ class FeedbackAnalysis(BaseModel):
     classification: Optional[FeedbackClassification]  # Feedback classification
     details: Optional[FeedbackDetails]  # Detailed feedback insights
     team: Optional[str]  # Assigned team (e.g., Product Team)
+
+# -----------------------------------------------------------
+# API Request/Response Models
+# Simple, clean models for HTTP communication
+# -----------------------------------------------------------
+class FeedbackRequest(BaseModel):
+    """Request model for analyzing feedback via API"""
+    feedback_text: str  # The feedback text to analyze
+    source: str = "api"  # Source of the feedback (defaults to 'api')
+    event_date: str = datetime.now().strftime("%Y-%m-%d")  # Event date (defaults to today)
+    feedback_id: Optional[str] = None  # Optional identifier for tracking
+
+class FeedbackResponse(BaseModel):
+    """Response model returning analysis results"""
+    success: bool  # Whether analysis succeeded
+    message: str  # Human-readable status message
+    analysis: Optional[FeedbackAnalysis] = None  # Full analysis details if successful
+
+# -----------------------------------------------------------
+# Initialize FastAPI application
+# Clean, elegant API for sentiment analysis
+# -----------------------------------------------------------
+app = FastAPI(
+    title="Operational Feedback Analysis API",
+    description="AI-powered sentiment analysis and JIRA ticket generation for operational feedback",
+    version="1.0.0",
+)
 
 # -----------------------------------------------------------
 # Load feedback data from JSON file
@@ -681,7 +715,109 @@ def run_full_feedback_analysis_pipeline():
         print("-------------------------------------------")  # Print separator
 
 # -----------------------------------------------------------
+# FastAPI Endpoints
+# Simple, elegant API interface for feedback analysis
+# -----------------------------------------------------------
+
+@app.post("/analyze", response_model=FeedbackResponse)
+async def analyze_feedback(request: FeedbackRequest):
+    """
+    Analyzes operational feedback and generates actionable insights with JIRA tickets.
+
+    This endpoint routes feedback through our 4-stage AI pipeline:
+    1. Routing: Determines if feedback is operational or non-operational
+    2. Classification: Categorizes into domains (Wi-Fi, Mobile App, etc.)
+    3. Detail Extraction: Identifies affected systems and sentiment
+    4. Analysis & Ticketing: Generates insights and JIRA tickets with team assignment
+
+    Args:
+        request: FeedbackRequest with feedback_text, source, event_date, and optional feedback_id
+
+    Returns:
+        FeedbackResponse with success status, message, and full analysis results
+    """
+    try:
+        # Log incoming request
+        feedback_id = request.feedback_id or f"api-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        logger.info(f"API request received for feedback: {feedback_id}")
+        logger.info(f"Feedback text: {request.feedback_text[:100]}...")  # Log first 100 chars
+
+        # Prepare feedback object for processing
+        feedback = {
+            "id": feedback_id,
+            "feedback_text": request.feedback_text,
+            "source": request.source,
+            "event_date": request.event_date,
+            "title": f"API Feedback - {feedback_id}",
+        }
+
+        # Process feedback through the AI pipeline
+        analysis_result = process_feedback(feedback)
+
+        # Log completion
+        logger.info(f"Analysis completed for feedback: {feedback_id}")
+        logger.info(f"Result: {analysis_result.message}")
+
+        # Return structured response
+        return FeedbackResponse(
+            success=analysis_result.success,
+            message=analysis_result.message,
+            analysis=analysis_result if analysis_result.success else None,
+        )
+
+    except Exception as e:
+        # Log error and return failure response
+        logger.error(f"Error processing feedback: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to process feedback: {str(e)}")
+
+@app.get("/health")
+async def health_check():
+    """
+    Simple health check endpoint to verify the API is running.
+
+    Returns:
+        JSON response with status and service information
+    """
+    logger.info("Health check requested")
+    return {
+        "status": "healthy",
+        "service": "Operational Feedback Analysis API",
+        "version": "1.0.0",
+        "model": model,
+    }
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Runs when the FastAPI application starts.
+    Logs startup information to stdout.
+    """
+    logger.info("=" * 80)
+    logger.info("Operational Feedback Analysis API - Starting Up")
+    logger.info("=" * 80)
+    logger.info(f"OpenAI Model: {model}")
+    logger.info(f"API Key Configured: {'Yes' if os.getenv('OPENAI_API_KEY') else 'No'}")
+    logger.info("Ready to process feedback requests")
+    logger.info("=" * 80)
+
+# -----------------------------------------------------------
 # Entry point for script execution
+# Supports both CLI mode and API server mode
 # -----------------------------------------------------------
 if __name__ == "__main__":
-    run_full_feedback_analysis_pipeline()  # Run the feedback analysis pipeline
+    import sys
+
+    # Check if we should run in API mode or CLI mode
+    if len(sys.argv) > 1 and sys.argv[1] == "--api":
+        # Run as API server
+        logger.info("Starting in API server mode...")
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=8000,
+            log_level="info",
+        )
+    else:
+        # Run as CLI script (original behavior)
+        logger.info("Starting in CLI mode...")
+        run_full_feedback_analysis_pipeline()  # Run the feedback analysis pipeline
