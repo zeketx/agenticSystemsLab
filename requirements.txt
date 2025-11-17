@@ -1,0 +1,16 @@
+# Core dependencies for Agentic Systems Lab
+# Sentiment Analysis & Feedback Processing
+
+# FastAPI and server dependencies
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.2
+
+# OpenAI API for LLM processing
+openai==1.54.3
+
+# Database support (for db_assistant)
+psycopg2-binary==2.9.9
+
+# General utilities
+python-dotenv==1.0.1
