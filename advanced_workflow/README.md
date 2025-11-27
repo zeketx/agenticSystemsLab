@@ -80,38 +80,18 @@ project-root/
 ## Development Phases
 
 ### Phase 1: Foundation
-- Set up a pyproject.toml file with the following dependences.
-[project]
-name = "ai-news-aggregator"
-version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "beautifulsoup4>=4.14.2",
-    "docling>=2.61.2",
-    "feedparser>=6.0.12",
-    "markdown>=3.7.0",
-    "markdownify>=0.11.6",
-    "openai>=2.7.2",
-    "psycopg2-binary>=2.9.11",
-    "pydantic>=2.0.0",
-    "python-dotenv>=1.2.1",
-    "requests>=2.32.5",
-    "sqlalchemy>=2.0.44",
-    "youtube-transcript-api>=1.2.3",
-]
-
-[dependency-groups]
-dev = [
-    "ipykernel>=7.1.0",
-]
-- Configure docker-compose.yml
+✅ complete. 
 
 ### Phase 2: Content Collection
-- Install packages needed for video scaper and YouTubeTranscriptAPI 
-- Implement YouTube RSS feed parser
-- 
+✅ Complete
+- ✅ Installed feedparser package
+- ✅ Implemented YouTube RSS feed parser ([youtube_scraper.py](app/scrapers/youtube_scraper.py))
+- ✅ Created helper script to get channel IDs from @handles ([get_channel_id.py](app/scrapers/get_channel_id.py))
+- ✅ Tested successfully with @indydevdan channel
+- Features:
+  - Fetch latest videos via RSS feeds
+  - Extract video metadata (title, description, published date, video ID)
+  - Support for up to 15 videos per channel (RSS limit) 
 
 ### Phase 2.1: Content Collection
 - Build blog post scraper
