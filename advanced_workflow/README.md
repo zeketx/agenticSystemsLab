@@ -55,19 +55,25 @@ Build an AI-powered news aggregation system that collects content from multiple 
 ## Technical Stack
 
 ### Backend
-- **Language:** Python
+- **Language:** Python 3.11+
 - **Database:** PostgreSQL
 - **ORM:** SQLAlchemy for database models and table creation
+- **Web Scraping:** BeautifulSoup4 for HTML parsing, requests for HTTP
+- **Content Parsing:** feedparser for RSS feeds, youtube-transcript-api for transcripts
 
 ### Project Structure
 ```
 project-root/
-├── app/              # All application logic
-│   ├── agents/       # SQLAlchemy models
-│   ├── services/     # Business logic (scraping, LLM, email)
-│   └── scrapers/
-└── docker/           # Docker configuration
-    └── postgres/     # Minimal PostgreSQL setup
+├── app/                          # All application logic
+│   ├── agents/                   # SQLAlchemy models
+│   ├── services/                 # Business logic (LLM, email)
+│   │   └── youtube_transcript.py
+│   └── scrapers/                 # Content scrapers
+│       ├── youtube_scraper.py    # YouTube RSS feed scraper
+│       └── anthropic_scraper.py  # Anthropic blog scraper
+├── test_youtube_scraper.py       # YouTube scraper tests
+├── test_anthropic_scraper.py     # Anthropic scraper tests
+└── docker-compose.yml            # Docker configuration
 ```
 
 ### Infrastructure
@@ -93,11 +99,21 @@ project-root/
   - Extract video metadata (title, description, published date, video ID)
   - Support for up to 15 videos per channel (RSS limit) 
 
-### Phase 2.1: Content Collection
-- Build blog post scraper
+### Phase 2.1: Content Collection - Anthropic Blog Scraper
+✅ Complete
+- ✅ Implemented Anthropic blog scraper ([anthropic_scraper.py](app/scrapers/anthropic_scraper.py))
+- ✅ Created comprehensive test script ([test_anthropic_scraper.py](test_anthropic_scraper.py))
+- ✅ Added to package exports for clean imports
+- Features:
+  - Scrape articles from Anthropic Research blog (https://www.anthropic.com/research)
+  - Scrape articles from Anthropic Engineering blog (https://www.anthropic.com/engineering)
+  - Extract article metadata: title, slug, URL, published date, summary, subject tags
+  - BeautifulSoup-based HTML parsing with robust error handling
+  - Support for pages with and without date information
+  - Duplicate prevention using URL tracking
 
-### Phase 2.2: Content Collection
-- Build blog post scraper
+### Phase 2.2: Content Collection - Additional Blog Sources
+- Build scrapers for other blog sources (OpenAI, Google AI, etc.)
 
 ### Phase 3: AI Processing
 - Integrate LLM for content summarization
@@ -140,3 +156,29 @@ project-root/
 ### Configuration
 
 Configure your content sources and user insights in the application settings.
+
+### Testing Scrapers
+
+**Test YouTube Scraper:**
+```bash
+python test_youtube_scraper.py
+```
+
+**Test Anthropic Blog Scraper:**
+```bash
+python test_anthropic_scraper.py
+```
+
+**Test Individual Methods:**
+```python
+# In Python shell
+from app.scrapers import YouTubeScraper, AnthropicScraper
+
+# Test YouTube scraper
+videos = YouTubeScraper.fetch_videos("CHANNEL_ID", max_results=5)
+
+# Test Anthropic scraper
+research_articles = AnthropicScraper.fetch_research_articles(5)
+engineering_articles = AnthropicScraper.fetch_engineering_articles(5)
+all_articles = AnthropicScraper.fetch_all_articles(10)
+```
