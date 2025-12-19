@@ -72,6 +72,67 @@ def test_all_articles():
             print(f"   URL: {article.url}")
             print()
 
+        # Test Pydantic validation
+        print("\n" + "=" * 50)
+        print("Testing Pydantic Validation")
+        print("=" * 50 + "\n")
+
+        if articles:
+            first_article = articles[0]
+
+            # Test valid data access
+            print("Model serialization:")
+            print(f"  Model dict keys: {list(first_article.model_dump().keys())}")
+            print(f"  JSON output (first 200 chars): {first_article.model_dump_json(indent=2)[:200]}...\n")
+
+            # Test validation - try invalid source_type
+            from app.scrapers.anthropic_scraper import ArticleData
+
+            print("Testing invalid source_type (should fail):")
+            try:
+                invalid = ArticleData(
+                    title="Test Article",
+                    slug="test-article",
+                    url="https://www.anthropic.com/test",
+                    published_date=first_article.published_date,
+                    summary="Test summary",
+                    subjects=["test"],
+                    source_type="invalid_type"  # Invalid literal - must be 'research' or 'engineering'
+                )
+                print("  ✗ Validation did NOT fail (unexpected)")
+            except Exception as e:
+                print(f"  ✓ Validation correctly failed: {str(e)[:100]}\n")
+
+            print("Testing invalid URL domain (should fail):")
+            try:
+                invalid = ArticleData(
+                    title="Test Article",
+                    slug="test-article",
+                    url="https://www.google.com/test",  # Wrong domain - must be anthropic.com
+                    published_date=first_article.published_date,
+                    summary="Test summary",
+                    subjects=["test"],
+                    source_type="research"
+                )
+                print("  ✗ Validation did NOT fail (unexpected)")
+            except Exception as e:
+                print(f"  ✓ Validation correctly failed: {str(e)[:100]}\n")
+
+            print("Testing invalid slug pattern (should fail):")
+            try:
+                invalid = ArticleData(
+                    title="Test Article",
+                    slug="invalid slug with spaces!",  # Invalid - must be alphanumeric with hyphens/underscores
+                    url="https://www.anthropic.com/test",
+                    published_date=first_article.published_date,
+                    summary="Test summary",
+                    subjects=["test"],
+                    source_type="research"
+                )
+                print("  ✗ Validation did NOT fail (unexpected)")
+            except Exception as e:
+                print(f"  ✓ Validation correctly failed: {str(e)[:100]}")
+
     except Exception as e:
         print(f"Error: {e}")
 

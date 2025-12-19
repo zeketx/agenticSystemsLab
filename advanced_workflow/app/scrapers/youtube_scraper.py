@@ -5,19 +5,39 @@ import requests
 import re
 from datetime import datetime
 from typing import List
-from dataclasses import dataclass
+from pydantic import BaseModel, Field, field_validator, HttpUrl
 
 
-@dataclass
-class VideoData:
-    """YouTube video metadata."""
-    title: str
-    video_id: str
-    channel_name: str
-    channel_id: str
+class VideoData(BaseModel):
+    """YouTube video metadata with validation."""
+
+    title: str = Field(..., min_length=1, max_length=500, description="Video title")
+    video_id: str = Field(..., pattern=r'^[a-zA-Z0-9_-]{11}$', description="11-character YouTube video ID")
+    channel_name: str = Field(..., min_length=1, max_length=200, description="Channel display name")
+    channel_id: str = Field(..., pattern=r'^UC[a-zA-Z0-9_-]{22}$', description="YouTube channel ID (UC prefix + 22 chars)")
     published_date: datetime
-    link: str
-    description: str
+    link: HttpUrl = Field(..., description="Full YouTube video URL")
+    description: str = Field(default="", description="Video description")
+
+    @field_validator('link')
+    @classmethod
+    def validate_youtube_url(cls, v: HttpUrl) -> HttpUrl:
+        """Ensure link is a valid YouTube URL."""
+        url_str = str(v)
+        if not ('youtube.com' in url_str or 'youtu.be' in url_str):
+            raise ValueError('Link must be a valid YouTube URL')
+        return v
+
+    @field_validator('title', 'channel_name')
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        """Remove leading/trailing whitespace."""
+        return v.strip()
+
+    model_config = {
+        'str_strip_whitespace': True,
+        'validate_assignment': True,
+    }
 
 
 class YouTubeScraper:

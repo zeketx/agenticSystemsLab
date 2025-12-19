@@ -18,7 +18,7 @@ dependencies = [
     "youtube-transcript-api>=1.2.3",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "ipykernel>=7.1.0",
 ]

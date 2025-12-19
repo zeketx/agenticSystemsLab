@@ -3,20 +3,55 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-from typing import List
-from dataclasses import dataclass
+from typing import Literal
+from pydantic import BaseModel, Field, field_validator, HttpUrl
 
 
-@dataclass
-class ArticleData:
-    """Anthropic blog article metadata."""
-    title: str
-    slug: str
-    url: str
+class ArticleData(BaseModel):
+    """Anthropic blog article metadata with validation."""
+
+    title: str = Field(..., min_length=1, max_length=500, description="Article title")
+    slug: str = Field(..., min_length=1, max_length=200, pattern=r'^[a-zA-Z0-9-_]+$', description="URL slug")
+    url: HttpUrl = Field(..., description="Full article URL")
     published_date: datetime
-    summary: str
-    subjects: List[str]
-    source_type: str  # 'research' or 'engineering'
+    summary: str = Field(default="", max_length=5000, description="Article summary/excerpt")
+    subjects: list[str] = Field(default_factory=list, description="Article tags/subjects")
+    source_type: Literal['research', 'engineering'] = Field(..., description="Blog source type")
+
+    @field_validator('url')
+    @classmethod
+    def validate_anthropic_url(cls, v: HttpUrl) -> HttpUrl:
+        """Ensure URL is from Anthropic domain."""
+        url_str = str(v)
+        if 'anthropic.com' not in url_str:
+            raise ValueError('URL must be from anthropic.com domain')
+        return v
+
+    @field_validator('title', 'summary')
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        """Remove leading/trailing whitespace."""
+        return v.strip()
+
+    @field_validator('subjects')
+    @classmethod
+    def validate_subjects(cls, v: list[str]) -> list[str]:
+        """Ensure subject tags are cleaned and deduplicated."""
+        # Strip whitespace from each subject and remove empty strings
+        cleaned = [s.strip() for s in v if s and s.strip()]
+        # Remove duplicates while preserving order
+        seen = set()
+        deduped = []
+        for subject in cleaned:
+            if subject.lower() not in seen:
+                seen.add(subject.lower())
+                deduped.append(subject)
+        return deduped
+
+    model_config = {
+        'str_strip_whitespace': True,
+        'validate_assignment': True,
+    }
 
 
 class AnthropicScraper:
@@ -85,7 +120,7 @@ class AnthropicScraper:
         raise ValueError(f"Could not parse date: {date_str}")
 
     @staticmethod
-    def _extract_articles_from_html(html: str, source_url: str) -> List[ArticleData]:
+    def _extract_articles_from_html(html: str, source_url: str) -> list[ArticleData]:
         """
         Extract article data from HTML content.
 
@@ -221,7 +256,7 @@ class AnthropicScraper:
         return articles
 
     @staticmethod
-    def fetch_research_articles(max_results: int = 20) -> List[ArticleData]:
+    def fetch_research_articles(max_results: int = 20) -> list[ArticleData]:
         """
         Fetch articles from Anthropic's Research blog.
 
@@ -239,7 +274,7 @@ class AnthropicScraper:
             raise Exception(f"Error fetching research articles: {str(e)}")
 
     @staticmethod
-    def fetch_engineering_articles(max_results: int = 20) -> List[ArticleData]:
+    def fetch_engineering_articles(max_results: int = 20) -> list[ArticleData]:
         """
         Fetch articles from Anthropic's Engineering blog.
 
@@ -257,7 +292,7 @@ class AnthropicScraper:
             raise Exception(f"Error fetching engineering articles: {str(e)}")
 
     @staticmethod
-    def fetch_all_articles(max_results: int = 20) -> List[ArticleData]:
+    def fetch_all_articles(max_results: int = 20) -> list[ArticleData]:
         """
         Fetch articles from both Research and Engineering blogs.
 
