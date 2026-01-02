@@ -1,0 +1,56 @@
+# Content sources configuration for AI News Aggregator
+# This file defines which YouTube channels and blogs to monitor for content aggregation
+
+youtube:
+  channels:
+    # IndyDevDan - AI/ML content creator
+    - id: "UC_x36zCEGilGpB1m-V4gmjg"
+      name: "IndyDevDan"
+      enabled: true
+      max_results: 15
+
+    # Add more YouTube channels here following the same pattern:
+    # - id: "UC1234567890123456789012"  # Must be UC + 22 characters
+    #   name: "Channel Name"
+    #   enabled: true
+    #   max_results: 15
+
+blogs:
+  # Anthropic blog sources
+  anthropic:
+    enabled: true
+    sources:
+      - type: "research"
+        url: "https://www.anthropic.com/research"
+        max_results: 20
+
+      - type: "engineering"
+        url: "https://www.anthropic.com/engineering"
+        max_results: 20
+
+  # OpenAI blog (example - disabled by default)
+  # openai:
+  #   enabled: false
+  #   sources:
+  #     - type: "blog"
+  #       url: "https://openai.com/blog"
+  #       max_results: 20
+
+  # Google AI blog (example - disabled by default)
+  # google:
+  #   enabled: false
+  #   sources:
+  #     - type: "blog"
+  #       url: "https://blog.google/technology/ai/"
+  #       max_results: 20
+
+# Global settings for content aggregation
+settings:
+  fetch_timeout_seconds: 30
+  retry_attempts: 3
+  user_interests:
+    - "AI"
+    - "Machine Learning"
+    - "Technology"
+    - "Software Development"
+    - "Large Language Models"
