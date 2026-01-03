@@ -52,6 +52,11 @@ Examples:
         action="store_true",
         help="Suppress progress logging"
     )
+    parser.add_argument(
+        "--save-to-db",
+        action="store_true",
+        help="Save results to database"
+    )
 
     args = parser.parse_args()
 
@@ -70,6 +75,15 @@ Examples:
             include_blogs=not args.no_blogs,
             include_transcripts=not args.no_transcripts,
         )
+
+        # Save to database if requested
+        if args.save_to_db:
+            from app.db import save_all
+            stats = save_all(result.videos, result.articles)
+            logging.info(
+                f"Database save complete: {stats['total_saved']} saved, "
+                f"{stats['total_skipped']} skipped (duplicates)"
+            )
 
         # Output results
         json_output = result.model_dump_json(indent=2)

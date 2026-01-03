@@ -14,22 +14,28 @@ Content aggregation system that collects AI-related content from YouTube channel
 - Configurable filters (YouTube/blogs/transcripts)
 - JSON output for downstream processing
 
+✅ **Database Storage**
+- PostgreSQL with automatic deduplication
+- Docker containerization
+- Optional database save via `--save-to-db` flag
+
 🚧 **Planned**
 - LLM-powered content summarization
 - Email digest delivery
-- PostgreSQL storage
 
 ## Tech Stack
 
 **Core:** Python 3.11+, Pydantic, BeautifulSoup4, feedparser, youtube-transcript-api
+**Database:** PostgreSQL 16 (Docker), SQLAlchemy
 **Deployment:** Render (cron scheduling)
-**Storage:** JSON export (PostgreSQL planned)
+**Storage:** JSON export + PostgreSQL (with deduplication)
 
 ## Project Structure
 
 ```
 app/
 ├── __main__.py              # CLI entry point
+├── db.py                    # Database operations (PostgreSQL)
 ├── config/                  # YAML config loader + validation
 ├── models/                  # Pydantic data models
 │   ├── aggregated_content.py
@@ -43,6 +49,11 @@ app/
 
 config/
 └── sources.yaml             # Source configuration
+
+scripts/
+└── init.sql                 # Database schema
+
+docker-compose.yml           # PostgreSQL container
 ```
 
 ## Quick Start
@@ -57,6 +68,19 @@ pip install -e .
 
 # Configure sources (optional)
 nano config/sources.yaml
+```
+
+### Database Setup (Optional)
+
+```bash
+# Start PostgreSQL container
+docker-compose up -d
+
+# Verify database is running
+docker ps
+
+# Database will auto-initialize with schema from scripts/init.sql
+# Default credentials: newsagg/newsagg/newsagg (user/password/database)
 ```
 
 ### Usage
@@ -77,6 +101,9 @@ python -m app --quiet --no-transcripts --output /path/to/daily.json
 # YouTube or blogs only
 python -m app --no-blogs          # YouTube only
 python -m app --no-youtube        # Blogs only
+
+# Save to database (requires Docker setup)
+python -m app --no-transcripts --save-to-db
 
 # Custom config
 python -m app --config /path/to/sources.yaml
@@ -121,9 +148,9 @@ blogs:
 - CLI with filtering options
 - YAML configuration
 - JSON export
+- PostgreSQL storage with automatic deduplication
 
 **🚧 Next Phase**
 - LLM summarization
 - Email delivery
-- PostgreSQL storage
 - Additional blog sources (OpenAI, DeepMind, etc.)
