@@ -4,8 +4,10 @@ import feedparser
 import requests
 import re
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator, HttpUrl
+
+from app.models.transcript import TranscriptData
 
 
 class VideoData(BaseModel):
@@ -18,6 +20,7 @@ class VideoData(BaseModel):
     published_date: datetime
     link: HttpUrl = Field(..., description="Full YouTube video URL")
     description: str = Field(default="", description="Video description")
+    transcript: Optional[TranscriptData] = Field(default=None, description="Video transcript if available")
 
     @field_validator('link')
     @classmethod

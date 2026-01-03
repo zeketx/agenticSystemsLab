@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 from app.config import BlogConfig, SourcesConfig, YouTubeChannelConfig, load_sources_config
 from app.models import AggregatedContent, AggregationMetadata
 from app.scrapers import AnthropicScraper, ArticleData, VideoData, YouTubeScraper
+from app.services.youtube_transcript import get_transcript
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -19,7 +20,8 @@ class ContentAggregator:
     def aggregate_content(
         config_path: Optional[str] = None,
         include_youtube: bool = True,
-        include_blogs: bool = True
+        include_blogs: bool = True,
+        include_transcripts: bool = True
     ) -> AggregatedContent:
         """
         Fetch content from all configured sources.
@@ -28,6 +30,7 @@ class ContentAggregator:
             config_path: Optional path to sources.yaml (defaults to config/sources.yaml)
             include_youtube: Whether to fetch YouTube videos (default: True)
             include_blogs: Whether to fetch blog articles (default: True)
+            include_transcripts: Whether to fetch video transcripts (default: True)
 
         Returns:
             AggregatedContent object with all fetched content and metadata
@@ -64,7 +67,10 @@ class ContentAggregator:
 
             if enabled_channels:
                 logger.info(f"Fetching from {len(enabled_channels)} YouTube channel(s)")
-                videos, errors = ContentAggregator._fetch_youtube_videos(enabled_channels)
+                videos, errors = ContentAggregator._fetch_youtube_videos(
+                    enabled_channels,
+                    fetch_transcripts=include_transcripts
+                )
                 all_videos.extend(videos)
                 all_errors.extend(errors)
                 sources_attempted += len(enabled_channels)
@@ -120,13 +126,15 @@ class ContentAggregator:
 
     @staticmethod
     def _fetch_youtube_videos(
-        channels_config: List[YouTubeChannelConfig]
+        channels_config: List[YouTubeChannelConfig],
+        fetch_transcripts: bool = True
     ) -> Tuple[List[VideoData], List[str]]:
         """
         Fetch videos from configured YouTube channels.
 
         Args:
             channels_config: List of enabled YouTube channel configurations
+            fetch_transcripts: Whether to fetch transcripts for videos (default: True)
 
         Returns:
             Tuple of (list of VideoData, list of error messages)
@@ -151,6 +159,17 @@ class ContentAggregator:
                 error_msg = f"Failed to fetch videos from channel {channel.name} ({channel.id}): {e}"
                 logger.error(error_msg)
                 errors.append(error_msg)
+
+        # Fetch transcripts for all videos if enabled
+        if fetch_transcripts and videos:
+            logger.info(f"Fetching transcripts for {len(videos)} video(s)")
+            for video in videos:
+                try:
+                    video.transcript = get_transcript(video.video_id)
+                    logger.debug(f"Transcript fetched for video {video.video_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to fetch transcript for {video.video_id}: {e}")
+                    # Continue without transcript - not a fatal error
 
         return videos, errors
 

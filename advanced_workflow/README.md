@@ -1,184 +1,129 @@
-# AI News Aggregator - Feature Set Request
+# AI News Aggregator
 
-## Project Overview
+Content aggregation system that collects AI-related content from YouTube channels and blogs, with optional transcript fetching and scheduled automation.
 
-Build an AI-powered news aggregation system that collects content from multiple sources, generates daily LLM-powered summaries, and delivers personalized digests via email.
+## Features
 
----
+✅ **Multi-Source Aggregation**
+- YouTube channels (RSS feeds + transcripts)
+- Blog articles (Anthropic Research & Engineering)
+- YAML-based configuration
 
-## Core Features
+✅ **Automated Collection**
+- 24-hour scheduling ready
+- Configurable filters (YouTube/blogs/transcripts)
+- JSON output for downstream processing
 
-### 1. Content Source Management
+🚧 **Planned**
+- LLM-powered content summarization
+- Email digest delivery
+- PostgreSQL storage
 
-#### YouTube Channel Integration
-- Maintain a list of YouTube channels to monitor
-- Fetch latest videos using YouTube RSS feeds
-- Store video metadata and links
+## Tech Stack
 
-#### Blog Post Scraping
-- Configure URLs for blog sources (e.g., OpenAI, Anthropic)
-- Scrape and parse blog content
-- Extract and store article metadata
+**Core:** Python 3.11+, Pydantic, BeautifulSoup4, feedparser, youtube-transcript-api
+**Deployment:** Render (cron scheduling)
+**Storage:** JSON export (PostgreSQL planned)
 
-### 2. Database Structure
+## Project Structure
 
-**Sources Table:** Store configured content sources (YouTube channels, blog URLs)
-
-**Articles Table:** Store collected content with:
-- Article/video title
-- Source reference
-- Publication date
-- Original link
-- Raw content/description
-- Timestamp
-
-### 3. Daily Digest Generation
-
-- Collect all articles within the specified time frame (24 hours)
-- Generate LLM-powered summaries using agent system prompt
-- User insights configuration to personalize digest content
-- Output format: Short snippets with links to original sources
-
-### 4. Email Delivery
-
-- Send generated daily digest to personal inbox
-- Include formatted summaries and source links
-
-### 5. Automation & Scheduling
-
-- Schedule digest generation every 24 hours
-- Automatic content fetching and processing
-- Automated email delivery
-
----
-
-## Technical Stack
-
-### Backend
-- **Language:** Python 3.11+
-- **Database:** PostgreSQL
-- **ORM:** SQLAlchemy for database models and table creation
-- **Web Scraping:** BeautifulSoup4 for HTML parsing, requests for HTTP
-- **Content Parsing:** feedparser for RSS feeds, youtube-transcript-api for transcripts
-
-### Project Structure
 ```
-project-root/
-├── app/                          # All application logic
-│   ├── agents/                   # SQLAlchemy models
-│   ├── services/                 # Business logic (LLM, email)
-│   │   └── youtube_transcript.py
-│   └── scrapers/                 # Content scrapers
-│       ├── youtube_scraper.py    # YouTube RSS feed scraper
-│       └── anthropic_scraper.py  # Anthropic blog scraper
-├── test_youtube_scraper.py       # YouTube scraper tests
-├── test_anthropic_scraper.py     # Anthropic scraper tests
-└── docker-compose.yml            # Docker configuration
+app/
+├── __main__.py              # CLI entry point
+├── config/                  # YAML config loader + validation
+├── models/                  # Pydantic data models
+│   ├── aggregated_content.py
+│   └── transcript.py
+├── scrapers/                # Content scrapers
+│   ├── youtube_scraper.py   # RSS + metadata
+│   └── anthropic_scraper.py # Blog scraping
+└── services/                # Business logic
+    ├── orchestrator.py      # Main aggregation coordinator
+    └── youtube_transcript.py
+
+config/
+└── sources.yaml             # Source configuration
 ```
 
-### Infrastructure
-- **Containerization:** Docker setup for PostgreSQL
-- **Deployment:** Render platform
-- **Scheduling:** 24-hour cron/scheduled jobs on Render
-
----
-
-## Development Phases
-
-### Phase 1: Foundation
-✅ complete. 
-
-### Phase 2: Content Collection
-✅ Complete
-- ✅ Installed feedparser package
-- ✅ Implemented YouTube RSS feed parser ([youtube_scraper.py](app/scrapers/youtube_scraper.py))
-- ✅ Created helper script to get channel IDs from @handles ([get_channel_id.py](app/scrapers/get_channel_id.py))
-- ✅ Tested successfully with @indydevdan channel
-- Features:
-  - Fetch latest videos via RSS feeds
-  - Extract video metadata (title, description, published date, video ID)
-  - Support for up to 15 videos per channel (RSS limit) 
-
-### Phase 2.1: Content Collection - Anthropic Blog Scraper
-✅ Complete
-- ✅ Implemented Anthropic blog scraper ([anthropic_scraper.py](app/scrapers/anthropic_scraper.py))
-- ✅ Created comprehensive test script ([test_anthropic_scraper.py](test_anthropic_scraper.py))
-- ✅ Added to package exports for clean imports
-- Features:
-  - Scrape articles from Anthropic Research blog (https://www.anthropic.com/research)
-  - Scrape articles from Anthropic Engineering blog (https://www.anthropic.com/engineering)
-  - Extract article metadata: title, slug, URL, published date, summary, subject tags
-  - BeautifulSoup-based HTML parsing with robust error handling
-  - Support for pages with and without date information
-  - Duplicate prevention using URL tracking
-
-### Phase 2.2: Content Collection - Additional Blog Sources
-- Build scrapers for other blog sources (OpenAI, Google AI, etc.)
-
-### Phase 3: AI Processing
-- Integrate LLM for content summarization
-- Implement agent system prompt configuration
-- Build daily digest generator
-
-### Phase 4: Delivery & Deployment
-- Implement email service
-- Set up Render deployment
-- Configure 24-hour scheduling
-- Testing and optimization
-
----
-
-## Key Requirements
-
-- ✅ Easy deployment to Render
-- ✅ Minimal Docker setup for local development
-- ✅ Scalable architecture for adding new sources
-- ✅ Configurable user insights for personalized summaries
-- ✅ Reliable 24-hour scheduling
-
----
-
-## Getting Started
-
-### Prerequisites
-- Python 3.11+
-- Docker and Docker Compose
-- PostgreSQL (via Docker)
+## Quick Start
 
 ### Installation
 
-1. Clone the repository
-2. Set up environment variables (see `.env.example`)
-3. Run Docker containers
-4. Initialize database
-5. Start the application
+```bash
+# Clone and install dependencies
+git clone <repo>
+cd advanced_workflow
+pip install -e .
+
+# Configure sources (optional)
+nano config/sources.yaml
+```
+
+### Usage
+
+```bash
+# Full aggregation (with transcripts)
+python -m app
+
+# Fast mode (no transcripts - 21x faster!)
+python -m app --no-transcripts
+
+# Save to file
+python -m app --output results.json
+
+# Quiet mode for cron jobs
+python -m app --quiet --no-transcripts --output /path/to/daily.json
+
+# YouTube or blogs only
+python -m app --no-blogs          # YouTube only
+python -m app --no-youtube        # Blogs only
+
+# Custom config
+python -m app --config /path/to/sources.yaml
+```
 
 ### Configuration
 
-Configure your content sources and user insights in the application settings.
+Edit `config/sources.yaml`:
 
-### Testing Scrapers
+```yaml
+youtube:
+  channels:
+    - id: "UC_x36zCEGilGpB1m-V4gmjg"
+      name: "IndyDevDan"
+      enabled: true
+      max_results: 15
 
-**Test YouTube Scraper:**
-```bash
-python test_youtube_scraper.py
+blogs:
+  anthropic:
+    enabled: true
+    sources:
+      - url: "https://www.anthropic.com/research"
+        type: "research"
+        max_results: 20
 ```
 
-**Test Anthropic Blog Scraper:**
-```bash
-python test_anthropic_scraper.py
-```
+## Performance
 
-**Test Individual Methods:**
-```python
-# In Python shell
-from app.scrapers import YouTubeScraper, AnthropicScraper
+| Mode | Time | Use Case |
+|------|------|----------|
+| With transcripts | ~18s | Full content analysis |
+| No transcripts | ~1s | Quick aggregation |
+| Blogs only | ~0.6s | Articles only |
 
-# Test YouTube scraper
-videos = YouTubeScraper.fetch_videos("CHANNEL_ID", max_results=5)
+**Recommendation:** Use `--no-transcripts` for scheduled runs unless you specifically need transcript data.
 
-# Test Anthropic scraper
-research_articles = AnthropicScraper.fetch_research_articles(5)
-engineering_articles = AnthropicScraper.fetch_engineering_articles(5)
-all_articles = AnthropicScraper.fetch_all_articles(10)
-```
+## Development Status
+
+**✅ Complete**
+- YouTube RSS scraping + transcript fetching
+- Anthropic blog scraping
+- CLI with filtering options
+- YAML configuration
+- JSON export
+
+**🚧 Next Phase**
+- LLM summarization
+- Email delivery
+- PostgreSQL storage
+- Additional blog sources (OpenAI, DeepMind, etc.)
