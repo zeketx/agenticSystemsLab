@@ -78,7 +78,7 @@ Examples:
 
         # Save to database if requested
         if args.save_to_db:
-            from app.db import save_all
+            from app.database.repository import save_all
             stats = save_all(result.videos, result.articles)
             logging.info(
                 f"Database save complete: {stats['total_saved']} saved, "

@@ -1,18 +1,11 @@
-"""Minimal database operations for content storage with deduplication."""
+"""Database repository for saving content with deduplication."""
 
-import os
 import logging
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from app.scrapers import VideoData, ArticleData
+from app.database.connections import engine
 
 logger = logging.getLogger(__name__)
-
-# Database connection
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://newsagg:newsagg@localhost:5432/newsagg"
-)
-engine = create_engine(DATABASE_URL)
 
 
 def save_video(video: VideoData) -> bool:
