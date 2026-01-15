@@ -73,17 +73,17 @@ def save_article(article: ArticleData) -> bool:
                     url, title, slug, published_at, summary, subjects
                 )
                 VALUES (
-                    :url, :title, :slug, :published_date, :summary, :subject_tags
+                    :url, :title, :slug, :published_date, :summary, :subjects
                 )
                 ON CONFLICT (url) DO NOTHING
                 RETURNING id
             """), {
-                "url": article.url,
+                "url": str(article.url),
                 "title": article.title,
                 "slug": article.slug,
                 "published_date": article.published_date,
                 "summary": article.summary,
-                "subject_tags": article.subject_tags if article.subject_tags else []
+                "subjects": article.subjects if article.subjects else []
             })
             conn.commit()
 
