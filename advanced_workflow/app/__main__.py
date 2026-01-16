@@ -5,61 +5,67 @@ import logging
 import sys
 from pathlib import Path
 from app.services import ContentAggregator
+from app.commands import enrich
 
 
-def main() -> int:
-    """Main entry point for content aggregation."""
-    parser = argparse.ArgumentParser(
-        description="Aggregate content from configured sources",
+def setup_aggregate_parser(subparsers) -> None:
+    """Setup content aggregation command parser."""
+    aggregate_parser = subparsers.add_parser(
+        'aggregate',
+        help='Aggregate content from configured sources',
+        description='Fetch and aggregate content from YouTube channels and blogs',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python -m app                          # Run full aggregation
-  python -m app --output results.json    # Save to file
-  python -m app --no-transcripts         # Skip transcript fetching
-  python -m app --quiet --output out.json # Quiet mode for cron jobs
+  python -m app aggregate                          # Run full aggregation
+  python -m app aggregate --output results.json    # Save to file
+  python -m app aggregate --no-transcripts         # Skip transcript fetching
+  python -m app aggregate --quiet --output out.json # Quiet mode for cron jobs
         """
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--config",
         type=str,
         default=None,
         help="Path to sources.yaml config file"
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--output",
         type=str,
         default=None,
         help="Output file path (default: stdout)"
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--no-youtube",
         action="store_true",
         help="Skip YouTube video fetching"
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--no-blogs",
         action="store_true",
         help="Skip blog article fetching"
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--no-transcripts",
         action="store_true",
         help="Skip transcript fetching for videos"
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress progress logging"
     )
-    parser.add_argument(
+    aggregate_parser.add_argument(
         "--save-to-db",
         action="store_true",
         help="Save results to database"
     )
 
-    args = parser.parse_args()
+    aggregate_parser.set_defaults(func=run_aggregate)
 
+
+def run_aggregate(args) -> int:
+    """Execute content aggregation command."""
     # Configure logging
     log_level = logging.WARNING if args.quiet else logging.INFO
     logging.basicConfig(
@@ -101,6 +107,50 @@ Examples:
     except Exception as e:
         logging.error(f"Aggregation failed: {e}", exc_info=not args.quiet)
         return 1
+
+
+def main() -> int:
+    """Main entry point with subcommand support."""
+    parser = argparse.ArgumentParser(
+        description="AI News Aggregator - Content collection and enrichment system",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Commands:
+  aggregate    Fetch content from YouTube channels and blogs
+  enrich       Backfill transcripts and article content in database
+
+Examples:
+  python -m app aggregate --save-to-db       # Aggregate and save to database
+  python -m app enrich --stats               # Show enrichment statistics
+  python -m app enrich --dry-run             # Preview enrichment without changes
+  python -m app enrich --articles-only       # Enrich only articles
+        """
+    )
+
+    # Create subparsers for commands
+    subparsers = parser.add_subparsers(
+        dest='command',
+        help='Available commands',
+        metavar='COMMAND'
+    )
+
+    # Setup aggregation command
+    setup_aggregate_parser(subparsers)
+
+    # Setup enrichment command
+    enrich.setup_enrich_parser(subparsers)
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # If no command specified, default to aggregate for backward compatibility
+    if args.command is None:
+        # Re-parse with aggregate as default
+        sys.argv.insert(1, 'aggregate')
+        args = parser.parse_args()
+
+    # Execute the command
+    return args.func(args)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """SQLAlchemy table definitions."""
 
-from sqlalchemy import Table, Column, Integer, String, Text, TIMESTAMP, ARRAY, MetaData
+from sqlalchemy import Table, Column, Integer, String, Text, TIMESTAMP, ARRAY, Boolean, MetaData
 
 metadata = MetaData()
 
@@ -14,6 +14,9 @@ videos = Table('videos', metadata,
     Column('link', Text),
     Column('description', Text),
     Column('transcript_text', Text),
+    Column('transcript_enriched_at', TIMESTAMP),
+    Column('transcript_fetch_attempted', Boolean, server_default='FALSE'),
+    Column('transcript_fetch_error', Text),
     Column('created_at', TIMESTAMP, server_default='NOW()')
 )
 
@@ -25,5 +28,9 @@ articles = Table('articles', metadata,
     Column('published_at', TIMESTAMP),
     Column('summary', Text),
     Column('subjects', ARRAY(Text)),
+    Column('content_markdown', Text),
+    Column('content_enriched_at', TIMESTAMP),
+    Column('content_fetch_attempted', Boolean, server_default='FALSE'),
+    Column('content_fetch_error', Text),
     Column('created_at', TIMESTAMP, server_default='NOW()')
 )
