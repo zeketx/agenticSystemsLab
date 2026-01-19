@@ -19,24 +19,38 @@ Content aggregation system that collects AI-related content from YouTube channel
 - Docker containerization
 - Optional database save via `--save-to-db` flag
 
+✅ **Content Enrichment**
+- Backfill transcripts for videos in database
+- Extract full article content as markdown
+- Batch processing with rate limiting
+- Idempotent enrichment (safe to re-run)
+- Error tracking and retry management
+
 🚧 **Planned**
 - LLM-powered content summarization
 - Email digest delivery
 
 ## Tech Stack
 
-**Core:** Python 3.11+, Pydantic, BeautifulSoup4, feedparser, youtube-transcript-api
+**Core:** Python 3.11+, Pydantic, BeautifulSoup4, feedparser, youtube-transcript-api, markdownify
 **Database:** PostgreSQL 16 (Docker), SQLAlchemy
 **Deployment:** Render (cron scheduling)
-**Storage:** JSON export + PostgreSQL (with deduplication)
+**Storage:** JSON export + PostgreSQL (with deduplication and enrichment tracking)
 
 ## Project Structure
 
 ```
 app/
-├── __main__.py              # CLI entry point
-├── db.py                    # Database operations (PostgreSQL)
+├── __main__.py              # CLI entry point (with subcommands)
+├── commands/                # CLI commands
+│   ├── __init__.py
+│   └── enrich.py            # Content enrichment command
 ├── config/                  # YAML config loader + validation
+├── database/                # Database layer
+│   ├── connections.py       # Database connection
+│   ├── models.py            # SQLAlchemy table definitions
+│   ├── repository.py        # Content save operations
+│   └── enrichment_repository.py  # Enrichment operations
 ├── models/                  # Pydantic data models
 │   ├── aggregated_content.py
 │   └── transcript.py
@@ -45,13 +59,16 @@ app/
 │   └── anthropic_scraper.py # Blog scraping
 └── services/                # Business logic
     ├── orchestrator.py      # Main aggregation coordinator
-    └── youtube_transcript.py
+    ├── youtube_transcript.py # Transcript fetching
+    ├── article_content_fetcher.py  # Article HTML → Markdown
+    └── content_enrichment.py # Enrichment orchestrator
 
 config/
 └── sources.yaml             # Source configuration
 
 scripts/
-└── init.sql                 # Database schema
+├── init.sql                 # Database schema (with enrichment)
+└── enrichment_migration.sql # Migration for existing databases
 
 docker-compose.yml           # PostgreSQL container
 ```
@@ -81,32 +98,72 @@ docker ps
 
 # Database will auto-initialize with schema from scripts/init.sql
 # Default credentials: newsagg/newsagg/newsagg (user/password/database)
+
+# For existing databases, run enrichment migration
+docker cp scripts/enrichment_migration.sql news-aggregator-db:/tmp/
+docker exec news-aggregator-db psql -U newsagg -d newsagg -f /tmp/enrichment_migration.sql
 ```
 
 ### Usage
 
+#### Content Aggregation
+
 ```bash
-# Full aggregation (with transcripts)
+# Full aggregation (with transcripts) - backward compatible
 python -m app
 
+# Or use explicit aggregate command
+python -m app aggregate
+
 # Fast mode (no transcripts - 21x faster!)
-python -m app --no-transcripts
+python -m app aggregate --no-transcripts
 
 # Save to file
-python -m app --output results.json
+python -m app aggregate --output results.json
 
 # Quiet mode for cron jobs
-python -m app --quiet --no-transcripts --output /path/to/daily.json
+python -m app aggregate --quiet --no-transcripts --output /path/to/daily.json
 
 # YouTube or blogs only
-python -m app --no-blogs          # YouTube only
-python -m app --no-youtube        # Blogs only
+python -m app aggregate --no-blogs          # YouTube only
+python -m app aggregate --no-youtube        # Blogs only
 
 # Save to database (requires Docker setup)
-python -m app --no-transcripts --save-to-db
+python -m app aggregate --no-transcripts --save-to-db
 
 # Custom config
-python -m app --config /path/to/sources.yaml
+python -m app aggregate --config /path/to/sources.yaml
+```
+
+#### Content Enrichment
+
+```bash
+# Show enrichment statistics
+python -m app enrich --stats
+
+# Dry run (preview what will be enriched)
+python -m app enrich --dry-run
+
+# Enrich all unenriched content (videos + articles)
+python -m app enrich
+
+# Enrich videos only
+python -m app enrich --videos-only
+
+# Enrich articles only
+python -m app enrich --articles-only
+
+# Limit number of items to enrich
+python -m app enrich --limit 50
+
+# Adjust rate limiting (seconds between requests)
+python -m app enrich --rate-limit 2.0
+
+# Custom batch size
+python -m app enrich --batch-size 25
+
+# Quiet mode for automation
+python -m app enrich --quiet
 ```
 
 ### Configuration
@@ -142,7 +199,7 @@ blogs:
 
 ## Development Status
 
-**✅ Complete**
+**✅ Stage 1: Content Aggregation (Complete)**
 - YouTube RSS scraping + transcript fetching
 - Anthropic blog scraping
 - CLI with filtering options
@@ -150,7 +207,36 @@ blogs:
 - JSON export
 - PostgreSQL storage with automatic deduplication
 
-**🚧 Next Phase**
-- LLM summarization
-- Email delivery
+**✅ Stage 2: Content Enrichment (Complete)**
+- Backfill video transcripts from database
+- Extract full article content as markdown
+- Batch processing with rate limiting
+- Idempotent enrichment operations
+- Error tracking and retry management
+- Enrichment statistics and dry-run mode
+
+**🚧 Stage 3: Next Phase**
+- LLM-powered content summarization
+- Email digest delivery
 - Additional blog sources (OpenAI, DeepMind, etc.)
+
+## Workflow
+
+### Typical Usage Pattern
+
+1. **Aggregate new content** (daily via cron):
+   ```bash
+   python -m app aggregate --save-to-db --no-transcripts --quiet
+   ```
+
+2. **Enrich database content** (periodic backfill):
+   ```bash
+   python -m app enrich --quiet
+   ```
+
+3. **Check enrichment status**:
+   ```bash
+   python -m app enrich --stats
+   ```
+
+This two-stage approach keeps aggregation fast while allowing comprehensive content enrichment to run separately.

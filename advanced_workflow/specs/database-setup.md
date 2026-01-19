@@ -226,3 +226,74 @@ python -m app --no-transcripts --save-to-db
 - **Articles:** `ON CONFLICT (url) DO NOTHING`
 
 Same content = same key = skipped. Simple.
+
+---
+
+## Stage 2 Extension: Content Enrichment
+
+**Status:** ✅ Implemented (January 2026)
+
+### Additional Columns
+
+**Videos table extensions:**
+```sql
+ALTER TABLE videos
+    ADD COLUMN transcript_enriched_at TIMESTAMP,
+    ADD COLUMN transcript_fetch_attempted BOOLEAN DEFAULT FALSE,
+    ADD COLUMN transcript_fetch_error TEXT;
+```
+
+**Articles table extensions:**
+```sql
+ALTER TABLE articles
+    ADD COLUMN content_markdown TEXT,
+    ADD COLUMN content_enriched_at TIMESTAMP,
+    ADD COLUMN content_fetch_attempted BOOLEAN DEFAULT FALSE,
+    ADD COLUMN content_fetch_error TEXT;
+```
+
+### New Database Module
+
+**app/database/enrichment_repository.py** (~220 lines):
+- `get_unenriched_videos(limit, offset)` - Query videos needing transcripts
+- `get_unenriched_articles(limit, offset)` - Query articles needing content
+- `update_video_transcript()` - Update video with transcript
+- `update_article_content()` - Update article with markdown content
+- `get_enrichment_stats()` - Return enrichment statistics
+
+### Migration
+
+For existing databases:
+```bash
+docker cp scripts/enrichment_migration.sql news-aggregator-db:/tmp/
+docker exec news-aggregator-db psql -U newsagg -d newsagg -f /tmp/enrichment_migration.sql
+```
+
+### Usage
+
+```bash
+# Show enrichment statistics
+python -m app enrich --stats
+
+# Enrich all unenriched content
+python -m app enrich
+
+# Enrich specific content type
+python -m app enrich --videos-only
+python -m app enrich --articles-only
+```
+
+### Indexes for Enrichment
+
+Partial indexes for efficient queries:
+```sql
+CREATE INDEX idx_videos_transcript_null
+    ON videos(id)
+    WHERE transcript_text IS NULL AND transcript_fetch_attempted = FALSE;
+
+CREATE INDEX idx_articles_content_null
+    ON articles(id)
+    WHERE content_markdown IS NULL AND content_fetch_attempted = FALSE;
+```
+
+See `specs/content-enrichment.md` for full documentation.
