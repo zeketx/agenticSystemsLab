@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python:*)",
       "Skill(prime)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(docker exec:*)"
     ]
   }
 }

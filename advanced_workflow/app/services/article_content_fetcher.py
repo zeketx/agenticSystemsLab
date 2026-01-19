@@ -34,15 +34,49 @@ def fetch_article_content(url: str) -> Tuple[Optional[str], Optional[str]]:
         # Parse HTML
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Find article content
+        # Find article content - try multiple selectors
+        content = None
+        selector_used = None
+
+        # Try semantic HTML tags first
         content = soup.find('article')
+        if content:
+            selector_used = '<article>'
 
         if not content:
-            # Fallback to main tag
             content = soup.find('main')
+            if content:
+                selector_used = '<main>'
+
+        # Fallback to common content container patterns
+        if not content:
+            for selector in [
+                {'class_': lambda x: x and 'content' in ' '.join(x).lower()},
+                {'class_': lambda x: x and 'article' in ' '.join(x).lower()},
+                {'class_': lambda x: x and 'post' in ' '.join(x).lower()},
+                {'id': lambda x: x and 'content' in x.lower()},
+            ]:
+                content = soup.find('div', **selector)
+                if content:
+                    selector_used = f"div with {list(selector.keys())[0]}"
+                    break
+
+        # Last resort: find the div with the most text content
+        if not content:
+            divs = soup.find_all('div')
+            if divs:
+                # Filter out divs that are likely navigation/footer by checking text length
+                text_divs = [(div, len(div.get_text(strip=True))) for div in divs]
+                # Sort by text length and take the largest
+                text_divs.sort(key=lambda x: x[1], reverse=True)
+                if text_divs and text_divs[0][1] > 500:  # At least 500 chars
+                    content = text_divs[0][0]
+                    selector_used = 'largest text-containing div'
 
         if not content:
-            return None, "Could not find article or main content on page"
+            return None, "Could not extract main content from page (tried: article, main, content divs, largest div)"
+
+        logger.debug(f"Content extracted using selector: {selector_used}")
 
         # Remove noise elements from within the content
         for tag in content.find_all(['script', 'style', 'nav', 'footer', 'aside']):

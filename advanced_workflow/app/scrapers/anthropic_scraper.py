@@ -91,6 +91,40 @@ class AnthropicScraper:
             raise Exception(f"Error fetching {url}: {str(e)}")
 
     @staticmethod
+    def _extract_meta_description(url: str) -> str:
+        """
+        Fetch individual article page and extract meta description.
+
+        Args:
+            url: Full article URL
+
+        Returns:
+            Meta description text or empty string if not found
+        """
+        try:
+            html = AnthropicScraper._fetch_page_html(url)
+            soup = BeautifulSoup(html, 'html.parser')
+
+            # Try meta description tag
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            if meta_desc and meta_desc.get('content'):
+                return meta_desc.get('content', '').strip()
+
+            # Try Open Graph description
+            og_desc = soup.find('meta', attrs={'property': 'og:description'})
+            if og_desc and og_desc.get('content'):
+                return og_desc.get('content', '').strip()
+
+            # Try Twitter description
+            twitter_desc = soup.find('meta', attrs={'name': 'twitter:description'})
+            if twitter_desc and twitter_desc.get('content'):
+                return twitter_desc.get('content', '').strip()
+
+            return ""
+        except Exception:
+            return ""
+
+    @staticmethod
     def _parse_date(date_str: str) -> datetime:
         """
         Parse date string to datetime object.
